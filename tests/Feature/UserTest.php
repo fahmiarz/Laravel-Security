@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contact;
 use App\Models\User;
+use Database\Seeders\ContactSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 class UserTest extends TestCase
@@ -57,6 +60,42 @@ class UserTest extends TestCase
              ->get('users/current')
              ->assertSeeText("Hello Arzalega");
 
-
     }
+
+    public function testTokenGuard()
+    {
+        $this->seed(UserSeeder::class);
+
+        $this->get('/api/users/current',
+        [
+            'Accept' => 'application/json',
+        ])
+            ->assertStatus(401);
+
+        $this->get('/api/users/current',
+        [
+            'Accept' => 'application/json',
+            'API-KEY' => 'secret'
+        ])
+            ->assertSeeText("Hello Arzalega");
+    }
+
+    public function testUserProvider()
+    {
+        $this->seed(UserSeeder::class);
+
+        $this->get('/simple-api/users/current',
+            [
+                'Accept' => 'application/json',
+            ])
+            ->assertStatus(401);
+
+        $this->get('/simple-api/users/current',
+            [
+                'Accept' => 'application/json',
+                'API-KEY' => 'secret'
+            ])
+            ->assertSeeText("Hello Arzalega");
+    }
+
 }
